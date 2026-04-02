@@ -1,0 +1,24 @@
+@extends('layouts.admin')
+@section('title', 'Thêm danh mục')
+
+@section('content')
+<h2 class="mb-4"><i class="bi bi-plus-lg"></i> Thêm danh mục mới</h2>
+
+<div class="card" style="max-width:600px">
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.categories.store') }}">
+            @csrf
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Tên danh mục *</label>
+                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+                    value="{{ old('name') }}" required placeholder="VD: Samsung, Xiaomi,...">
+                @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a href="{{ route('admin.categories.index') }}" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
