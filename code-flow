@@ -1,0 +1,393 @@
+# Code Flow
+
+Tai lieu nay mo ta 2 lop flow chinh:
+
+1. Flow nghiep vu cua website PhoneShop.
+2. Flow bootstrap va runtime cua `start.ps1`.
+
+## 1. Tong quan source
+
+Repo nay khong chua tron bo Laravel app de chay truc tiep tai root. Source nghiep vu nam o cac thu muc:
+
+- `app/`
+- `routes/`
+- `resources/`
+- `database/`
+- `public/css/`
+- `storage/app/public/products/`
+
+Khi chay local, `start.ps1` se bootstrap mot Laravel runtime day du vao `.phoneshop-runtime/app`, sau do copy source nghiep vu tu root vao runtime nay roi moi start server.
+
+## 2. Web request flow
+
+Flow request web co the hieu ngan gon nhu sau:
+
+1. `start.ps1` chay `php artisan serve`.
+2. PHP built-in server nhan request.
+3. Request vao `public/index.php` trong runtime Laravel.
+4. Laravel bootstrap app qua `bootstrap/app.php`.
+5. Router nap `routes/web.php`.
+6. Controller xu ly nghiep vu.
+7. Model thao tac du lieu.
+8. View Blade trong `resources/views` render HTML tra ve browser.
+
+## 3. Route map
+
+File route chinh: `routes/web.php`
+
+### Public
+
+- `/` -> `HomeController@index`
+- `/products` -> `ProductController@index`
+- `/products/{id}` -> `ProductController@show`
+- `/cart` -> `CartController@index`
+- `/cart/add` -> `CartController@add`
+- `/cart/update` -> `CartController@update`
+- `/cart/remove/{id}` -> `CartController@remove`
+
+### Auth
+
+- `/login` -> form + xu ly dang nhap
+- `/register` -> form + xu ly dang ky
+- `/logout` -> dang xuat
+
+### User da dang nhap
+
+- `/checkout` -> `OrderController@checkout`
+- `POST /checkout` -> `OrderController@placeOrder`
+- `/orders` -> lich su don
+- `/orders/{id}` -> chi tiet don cua chinh user
+
+### Admin
+
+- `/admin` -> dashboard
+- `/admin/categories/*` -> CRUD danh muc
+- `/admin/products/*` -> CRUD san pham
+- `/admin/orders` -> danh sach don
+- `/admin/orders/{id}` -> chi tiet don
+- `/admin/orders/{id}/status` -> cap nhat trang thai don
+
+## 4. Flow nghiep vu chinh
+
+## 4.1 Trang chu
+
+`HomeController@index` lay:
+
+- 8 san pham moi nhat
+- danh sach danh muc kem so luong san pham
+
+Muc tieu la hien section featured products va category overview.
+
+## 4.2 Danh sach san pham
+
+`ProductController@index` tao query `Product::with('category')` roi filter theo:
+
+- `search`
+- `category`
+- `price_min`
+- `price_max`
+- `sort`
+
+Neu khong co `sort`, he thong sap xep `latest()`. Ket qua duoc paginate 12 item/trang.
+
+`ProductController@show` lay 1 san pham va toi da 4 san pham lien quan cung category.
+
+## 4.3 Gio hang
+
+`CartController` dung `session()->get('cart', [])` lam nguon du lieu. Cart khong luu DB.
+
+Mau du lieu cart item:
+
+- `id`
+- `name`
+- `price`
+- `quantity`
+- `image`
+- `stock`
+
+### Them vao gio
+
+`CartController@add`:
+
+1. Validate `product_id`, `quantity`.
+2. Doc san pham tu DB.
+3. Kiem tra ton kho.
+4. Cong don so luong vao item co san trong session.
+5. Gioi han quantity khong vuot stock hien tai.
+6. Ghi lai session cart.
+
+Neu vuot ton kho, controller van cap nhat ve muc hop le va tra flash message.
+
+### Cap nhat gio
+
+`CartController@update`:
+
+1. Validate input.
+2. Neu quantity <= 0 thi xoa item.
+3. Neu san pham het hang thi xoa item khoi gio.
+4. Neu quantity lon hon stock thi cat ve stock hien co.
+5. Ghi lai session.
+
+### Xoa khoi gio
+
+`CartController@remove` xoa key `p{id}` khoi session cart.
+
+## 4.4 Dang ky / dang nhap
+
+`AuthController` dung auth mac dinh cua Laravel:
+
+- `register()` tao user moi voi `role = customer`
+- `login()` dung `Auth::attempt()`
+- `logout()` logout, invalidate session, regenerate CSRF token
+
+Admin duoc xac dinh boi `User::isAdmin()` va middleware `admin`.
+
+## 4.5 Dat hang
+
+`OrderController` la flow nghiep vu quan trong nhat.
+
+### Checkout
+
+`checkout()`:
+
+1. Goi `refreshCart()` de dong bo gio theo ton kho moi nhat.
+2. Neu cart rong -> quay lai gio hang.
+3. Neu cart bi dieu chinh -> quay lai gio hang de user kiem tra lai.
+4. Tinh tong tien va render trang checkout.
+
+### Place order
+
+`placeOrder()`:
+
+1. Validate thong tin nguoi nhan.
+2. Goi lai `refreshCart()` de tranh dat don voi du lieu ton kho cu.
+3. Tinh `total`.
+4. Tao `DB::transaction(...)`.
+5. Tao `orders` record voi `status = pending`.
+6. Lap tung cart item:
+   - doc lai `Product`
+   - kiem tra stock lan cuoi
+   - `decrement('stock', quantity)`
+   - tao `order_items`
+7. Commit transaction.
+8. Xoa cart khoi session.
+9. Redirect sang trang chi tiet don.
+
+`refreshCart()` dong vai tro "chong lech ton kho":
+
+- bo san pham khong con ton tai
+- bo san pham het hang
+- cat quantity ve ton kho hien co
+
+## 4.6 Lich su don cua user
+
+`OrderController@index` chi lay don cua `auth()->id()`.
+
+`OrderController@show` chi cho xem don cua chinh user do. Day la lop bao ve ownership o muc query.
+
+## 4.7 Dashboard admin
+
+`Admin\DashboardController@index` tinh:
+
+- tong san pham
+- tong don hang
+- tong khach role `customer`
+- tong doanh thu cua don `completed`
+
+Dong thoi lay 5 don moi nhat de hien thi nhanh.
+
+## 4.8 Admin quan ly danh muc
+
+`Admin\CategoryController`:
+
+- tao slug bang `Str::slug(name)`
+- enforce uniqueness qua `validateCategorySlug()`
+- khong cho xoa category neu van con san pham
+
+## 4.9 Admin quan ly san pham
+
+`Admin\ProductController`:
+
+- validate input
+- tao slug
+- upload image vao disk `public`
+- khi update co the remove image cu
+- khi delete:
+  - neu san pham da xuat hien trong `order_items` thi khong cho xoa
+  - neu duoc xoa thi xoa kem file anh
+
+## 4.10 Admin quan ly don hang
+
+`Admin\OrderController@updateStatus` quan ly state machine cua don hang.
+
+Trang thai duoc dinh nghia trong `Order` model:
+
+- `pending`
+- `confirmed`
+- `shipping`
+- `completed`
+- `cancelled`
+
+Rule transition cung duoc dinh nghia trong model:
+
+- `pending -> confirmed/cancelled`
+- `confirmed -> shipping/cancelled`
+- `shipping -> completed/cancelled`
+- `completed ->` khong di tiep
+- `cancelled -> confirmed`
+
+Logic ton kho:
+
+- Neu don dang o trang thai khac `cancelled` ma chuyen sang `cancelled`, stock duoc cong lai.
+- Neu don dang `cancelled` ma chuyen lai trang thai hoat dong, stock bi tru lai.
+- Neu khong du stock de khoi phuc don da huy, he thong chan transition.
+
+Day la co che giu nhat quan giua `orders`, `order_items` va `products.stock`.
+
+## 5. Data model
+
+Bang chinh:
+
+- `users`
+- `categories`
+- `products`
+- `orders`
+- `order_items`
+
+Quan he:
+
+- `Category hasMany Product`
+- `Product belongsTo Category`
+- `User hasMany Order`
+- `Order belongsTo User`
+- `Order hasMany OrderItem`
+- `OrderItem belongsTo Order`
+- `OrderItem belongsTo Product`
+
+## 6. Seed data
+
+`DatabaseSeeder` tao:
+
+- 1 admin demo
+- 2 customer demo
+- 6 categories
+- bo san pham mau cho Apple, Samsung, Xiaomi, OPPO, Vivo, Realme
+
+Tai khoan admin demo:
+
+- `admin@phoneshop.com / password`
+
+## 7. Start.ps1 flow
+
+`start.ps1` la bootstrapper cho local runtime tren Windows.
+
+## 7.1 Muc tieu
+
+Script nay khong chay source root truc tiep. No tao ra mot runtime Laravel o `.phoneshop-runtime/app`, dong bo source nghiep vu vao do, roi start server tu runtime nay.
+
+## 7.2 Cac buoc chinh
+
+### Buoc 1: resolve PHP
+
+`Ensure-Php()`:
+
+- uu tien local PHP trong `.tools/php/php.exe`
+- neu chua co thi tai portable PHP
+- cau hinh `php.ini`
+- bat cac extension can thiet nhu `pdo_sqlite`, `sqlite3`, `pdo_mysql`, `zip`
+
+### Buoc 2: check runtime requirement
+
+`Check-RuntimeRequirements()`:
+
+- neu dung SQLite thi bat buoc co `pdo_sqlite` va `sqlite3`
+- neu dung MySQL thi bat buoc co `pdo_mysql` va `mysql` client
+
+### Buoc 3: stop server cu
+
+`Stop-Existing()`:
+
+- doc PID cu trong `.phoneshop-runtime/server.pid`
+- goi `stop.ps1`
+- doi process cu thoat
+
+### Buoc 4: bootstrap Laravel runtime
+
+`Bootstrap-LaravelRuntime()`:
+
+1. Neu runtime da co `artisan` + `vendor/autoload.php` thi bo qua.
+2. Resolve Composer local/global.
+3. `composer create-project laravel/laravel:^10.0` vao `.phoneshop-runtime/app`.
+4. Xoa `require-dev` va `autoload-dev` khoi `composer.json`.
+5. `composer install --no-dev --no-scripts`.
+
+Y nghia:
+
+- Repo chi giu source nghiep vu.
+- Runtime Laravel day du duoc tai/dung ra khi can.
+
+### Buoc 5: sync source nghiep vu
+
+`Sync-ProjectFiles()` copy source tu root vao runtime:
+
+- `app/`
+- `database/migrations/`
+- `database/seeders/DatabaseSeeder.php`
+- `resources/`
+- `routes/web.php`
+- `public/css/`
+- `storage/app/public/products/`
+
+No cung reset mot so thu muc trong runtime truoc khi copy de tranh rac tu lan chay cu.
+
+### Buoc 6: tao/cap nhat `.env`
+
+`Ensure-EnvFile()`:
+
+- copy tu `.env.example` neu can
+- set `APP_NAME`, `APP_ENV`, `APP_DEBUG`, `APP_URL`
+- set config session/cache/queue
+- set DB config theo SQLite hoac MySQL
+
+### Buoc 7: prepare app
+
+`Prepare-App()`:
+
+- tao folder can thiet
+- tao file SQLite neu dung SQLite
+- tao DB neu dung MySQL
+- patch `termwind` fallback neu thieu DOM extension
+- `artisan key:generate` neu chua co `APP_KEY`
+- `artisan optimize:clear`
+- `artisan package:discover`
+- `artisan storage:link`
+- `artisan migrate --force`
+- `artisan db:seed --force` lan dau
+
+File `.phoneshop-seeded` duoc dung de tranh seed lap lai moi lan start.
+
+### Buoc 8: start server
+
+`Start-Server()`:
+
+- chay `php artisan serve --host=... --port=...`
+- redirect stdout/stderr vao log
+- ghi PID va port ra file
+- doi 2 giay de verify process van song
+
+Log local:
+
+- `.phoneshop-runtime/server.log`
+- `.phoneshop-runtime/server-error.log`
+
+## 8. Source of truth can sua
+
+Neu can thay doi nghiep vu, uu tien sua source goc o root repo, khong sua trong runtime:
+
+- `app/`
+- `routes/web.php`
+- `resources/views/`
+- `database/migrations/`
+- `database/seeders/`
+
+Runtime chi la ban duoc bootstrap de chay local.
