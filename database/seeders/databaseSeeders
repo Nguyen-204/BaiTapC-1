@@ -1,0 +1,81 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Models\Category;
+use App\Models\Product;
+
+class DatabaseSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // ========== USERS ==========
+        User::create([
+            'name' => 'Admin',
+            'email' => 'admin@phoneshop.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+        ]);
+        User::create([
+            'name' => 'Nguyễn Văn A',
+            'email' => 'nguyenvana@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
+        ]);
+        User::create([
+            'name' => 'Trần Thị B',
+            'email' => 'tranthib@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
+        ]);
+
+        // ========== CATEGORIES ==========
+        $cats = [
+            ['name' => 'Apple (iPhone)', 'slug' => 'apple'],
+            ['name' => 'Samsung', 'slug' => 'samsung'],
+            ['name' => 'Xiaomi', 'slug' => 'xiaomi'],
+            ['name' => 'OPPO', 'slug' => 'oppo'],
+            ['name' => 'Vivo', 'slug' => 'vivo'],
+            ['name' => 'Realme', 'slug' => 'realme'],
+        ];
+        foreach ($cats as $c) {
+            Category::create($c);
+        }
+
+        // ========== PRODUCTS ==========
+        $products = [
+            // Apple
+            ['category_id' => 1, 'name' => 'iPhone 15 Pro Max 256GB', 'slug' => 'iphone-15-pro-max-256gb', 'price' => 29990000, 'original_price' => 34990000, 'description' => 'iPhone 15 Pro Max sở hữu chip A17 Pro mạnh mẽ, camera 48MP tiên tiến, khung viền titan bền bỉ và màn hình Super Retina XDR OLED 6.7 inch sắc nét.', 'specifications' => 'Màn hình: 6.7" Super Retina XDR OLED | CPU: Apple A17 Pro | RAM: 8GB | ROM: 256GB | Camera: 48MP + 12MP + 12MP | Pin: 4441 mAh | Sạc nhanh 20W', 'image' => 'products/iphone-15-pro-max-256gb.png', 'stock' => 50],
+            ['category_id' => 1, 'name' => 'iPhone 15 128GB', 'slug' => 'iphone-15-128gb', 'price' => 19990000, 'original_price' => 22990000, 'description' => 'iPhone 15 với Dynamic Island, camera 48MP, chip A16 Bionic và thiết kế mới với mặt lưng kính nhám sang trọng.', 'specifications' => 'Màn hình: 6.1" Super Retina XDR OLED | CPU: Apple A16 Bionic | RAM: 6GB | ROM: 128GB | Camera: 48MP + 12MP | Pin: 3877 mAh', 'image' => 'products/iphone-15-128gb.png', 'stock' => 35],
+            ['category_id' => 1, 'name' => 'iPhone 14 128GB', 'slug' => 'iphone-14-128gb', 'price' => 16990000, 'original_price' => 19990000, 'description' => 'iPhone 14 với camera kép 12MP cải tiến, chip A15 Bionic và chế độ điện ảnh nâng cấp.', 'specifications' => 'Màn hình: 6.1" Super Retina XDR OLED | CPU: Apple A15 Bionic | RAM: 6GB | ROM: 128GB | Camera: 12MP + 12MP | Pin: 3279 mAh', 'image' => 'products/iphone-14-128gb.jpg', 'stock' => 25],
+
+            // Samsung
+            ['category_id' => 2, 'name' => 'Samsung Galaxy S24 Ultra 256GB', 'slug' => 'samsung-galaxy-s24-ultra', 'price' => 31990000, 'original_price' => 33990000, 'description' => 'Galaxy S24 Ultra trang bị Galaxy AI, chip Snapdragon 8 Gen 3 mạnh mẽ, camera 200MP và bút S Pen tích hợp.', 'specifications' => 'Màn hình: 6.8" Dynamic AMOLED 2X | CPU: Snapdragon 8 Gen 3 | RAM: 12GB | ROM: 256GB | Camera: 200MP + 50MP + 12MP + 10MP | Pin: 5000 mAh', 'image' => 'products/samsung-galaxy-s24-ultra.png', 'stock' => 40],
+            ['category_id' => 2, 'name' => 'Samsung Galaxy A55 5G', 'slug' => 'samsung-galaxy-a55-5g', 'price' => 9490000, 'original_price' => 10990000, 'description' => 'Galaxy A55 5G với thiết kế nguyên khối cao cấp, màn hình Super AMOLED 120Hz và camera 50MP OIS.', 'specifications' => 'Màn hình: 6.6" Super AMOLED 120Hz | CPU: Exynos 1480 | RAM: 8GB | ROM: 128GB | Camera: 50MP + 12MP + 5MP | Pin: 5000 mAh', 'image' => 'products/samsung-galaxy-a55-5g.png', 'stock' => 60],
+            ['category_id' => 2, 'name' => 'Samsung Galaxy A15', 'slug' => 'samsung-galaxy-a15', 'price' => 4490000, 'original_price' => 4990000, 'description' => 'Galaxy A15 với màn hình Super AMOLED lớn, pin trâu 5000mAh, phù hợp cho người dùng phổ thông.', 'specifications' => 'Màn hình: 6.5" Super AMOLED | CPU: MediaTek Helio G99 | RAM: 6GB | ROM: 128GB | Camera: 50MP + 5MP + 2MP | Pin: 5000 mAh', 'image' => 'products/samsung-galaxy-a15.png', 'stock' => 80],
+
+            // Xiaomi
+            ['category_id' => 3, 'name' => 'Xiaomi 14 Ultra', 'slug' => 'xiaomi-14-ultra', 'price' => 23990000, 'original_price' => 26990000, 'description' => 'Xiaomi 14 Ultra với hệ thống camera Leica chuyên nghiệp, chip Snapdragon 8 Gen 3 và sạc nhanh 90W.', 'specifications' => 'Màn hình: 6.73" LTPO AMOLED 120Hz | CPU: Snapdragon 8 Gen 3 | RAM: 16GB | ROM: 512GB | Camera: 50MP Leica x4 | Pin: 5300 mAh', 'image' => 'products/xiaomi-14-ultra.png', 'stock' => 25],
+            ['category_id' => 3, 'name' => 'Redmi Note 13 Pro 5G', 'slug' => 'redmi-note-13-pro-5g', 'price' => 7490000, 'original_price' => 8490000, 'description' => 'Redmi Note 13 Pro 5G với camera 200MP, màn hình AMOLED 120Hz và hiệu năng mạnh mẽ trong tầm giá.', 'specifications' => 'Màn hình: 6.67" AMOLED 120Hz | CPU: Snapdragon 7s Gen 2 | RAM: 8GB | ROM: 256GB | Camera: 200MP + 8MP + 2MP | Pin: 5100 mAh', 'image' => 'products/redmi-note-13-pro-5g.png', 'stock' => 70],
+
+            // OPPO
+            ['category_id' => 4, 'name' => 'OPPO Find X7 Ultra', 'slug' => 'oppo-find-x7-ultra', 'price' => 22990000, 'original_price' => 24990000, 'description' => 'OPPO Find X7 Ultra với camera Hasselblad, chip Dimensity 9300 và sạc siêu nhanh 100W.', 'specifications' => 'Màn hình: 6.82" LTPO AMOLED 120Hz | CPU: Dimensity 9300 | RAM: 16GB | ROM: 256GB | Camera: 50MP Hasselblad x4 | Pin: 5600 mAh', 'image' => 'products/oppo-find-x7-ultra.jpg', 'stock' => 20],
+            ['category_id' => 4, 'name' => 'OPPO A79 5G', 'slug' => 'oppo-a79-5g', 'price' => 6490000, 'original_price' => 7490000, 'description' => 'OPPO A79 5G thiết kế trẻ trung, hỗ trợ 5G, sạc nhanh 33W và pin 5000mAh sử dụng cả ngày.', 'specifications' => 'Màn hình: 6.72" IPS LCD 90Hz | CPU: Dimensity 6020 | RAM: 8GB | ROM: 256GB | Camera: 50MP + 2MP | Pin: 5000 mAh', 'image' => 'products/oppo-a79-5g.png', 'stock' => 55],
+
+            // Vivo
+            ['category_id' => 5, 'name' => 'Vivo X100 Pro', 'slug' => 'vivo-x100-pro', 'price' => 19990000, 'original_price' => 22990000, 'description' => 'Vivo X100 Pro với camera ZEISS chuyên nghiệp, chip Dimensity 9300 và khả năng quay video 4K HDR.', 'specifications' => 'Màn hình: 6.78" LTPO AMOLED 120Hz | CPU: Dimensity 9300 | RAM: 12GB | ROM: 256GB | Camera: 50MP ZEISS + 50MP + 50MP | Pin: 5400 mAh', 'image' => 'products/vivo-x100-pro.jpg', 'stock' => 30],
+            ['category_id' => 5, 'name' => 'Vivo Y36', 'slug' => 'vivo-y36', 'price' => 4990000, 'original_price' => 5490000, 'description' => 'Vivo Y36 với thiết kế thời trang, pin lớn 5000mAh và camera AI 50MP cho ảnh chụp rõ nét.', 'specifications' => 'Màn hình: 6.64" IPS LCD 90Hz | CPU: Snapdragon 680 | RAM: 8GB | ROM: 128GB | Camera: 50MP + 2MP | Pin: 5000 mAh', 'image' => 'products/vivo-y36.png', 'stock' => 65],
+
+            // Realme
+            ['category_id' => 6, 'name' => 'Realme GT 5 Pro', 'slug' => 'realme-gt-5-pro', 'price' => 13990000, 'original_price' => 15990000, 'description' => 'Realme GT 5 Pro với chip Snapdragon 8 Gen 3, camera Sony IMX890 và sạc nhanh 100W đầy pin trong 26 phút.', 'specifications' => 'Màn hình: 6.78" LTPO AMOLED 144Hz | CPU: Snapdragon 8 Gen 3 | RAM: 12GB | ROM: 256GB | Camera: 50MP Sony + 8MP + 2MP | Pin: 5400 mAh', 'image' => 'products/realme-gt-5-pro.png', 'stock' => 45],
+            ['category_id' => 6, 'name' => 'Realme C67', 'slug' => 'realme-c67', 'price' => 3990000, 'original_price' => 4490000, 'description' => 'Realme C67 phân khúc giá rẻ với camera 108MP ấn tượng, pin 5000mAh và sạc nhanh 33W.', 'specifications' => 'Màn hình: 6.72" IPS LCD 90Hz | CPU: Snapdragon 685 | RAM: 6GB | ROM: 128GB | Camera: 108MP + 2MP | Pin: 5000 mAh', 'image' => 'products/realme-c67.png', 'stock' => 90],
+        ];
+
+        foreach ($products as $p) {
+            Product::create($p);
+        }
+    }
+}
